@@ -1,0 +1,286 @@
+{
+  "firebaseSyncState": {},
+  "sidebar": {
+    "containers": [
+      {
+        "global": {}
+      },
+      {
+        "spaces": [
+          "a1000000-0000-4000-8000-000000000000",
+          {
+            "id": "a1000000-0000-4000-8000-000000000000",
+            "title": "Personal",
+            "profile": {
+              "default": true
+            },
+            "containerIDs": [
+              "pinned",
+              "c1000000-0000-4000-8000-000000000000",
+              "unpinned",
+              "c2000000-0000-4000-8000-000000000000"
+            ],
+            "newContainerIDs": [
+              { "pinned": {} },
+              "c1000000-0000-4000-8000-000000000000",
+              { "unpinned": { "_0": { "shared": {} } } },
+              "c2000000-0000-4000-8000-000000000000"
+            ],
+            "customInfo": {
+              "iconType": { "icon": "heart" }
+            }
+          }
+        ],
+        "items": [
+          "c1000000-0000-4000-8000-000000000000",
+          {
+            "id": "c1000000-0000-4000-8000-000000000000",
+            "title": null,
+            "parentID": null,
+            "childrenIds": [
+              "thebrowser.company.arcBasicsFolderID",
+              "f1000000-0000-4000-8000-000000000000",
+              "b3000000-0000-4000-8000-000000000000"
+            ],
+            "createdAt": 757562417.372359,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "itemContainer": {
+                "containerType": {
+                  "spaceItems": {
+                    "_0": "a1000000-0000-4000-8000-000000000000"
+                  }
+                }
+              }
+            }
+          },
+          "c2000000-0000-4000-8000-000000000000",
+          {
+            "id": "c2000000-0000-4000-8000-000000000000",
+            "title": null,
+            "parentID": null,
+            "childrenIds": [
+              "f2000000-0000-4000-8000-000000000000",
+              "b4000000-0000-4000-8000-000000000000"
+            ],
+            "createdAt": 757562417.372359,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "itemContainer": {
+                "containerType": {
+                  "spaceItems": {
+                    "_0": "a1000000-0000-4000-8000-000000000000"
+                  }
+                }
+              }
+            }
+          },
+          "c3000000-0000-4000-8000-000000000000",
+          {
+            "id": "c3000000-0000-4000-8000-000000000000",
+            "title": null,
+            "parentID": null,
+            "childrenIds": [
+              "b6000000-0000-4000-8000-000000000000"
+            ],
+            "createdAt": 757562417.372359,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "itemContainer": {
+                "containerType": {
+                  "topApps": {
+                    "_0": { "default": true }
+                  }
+                }
+              }
+            }
+          },
+          "thebrowser.company.arcBasicsFolderID",
+          {
+            "id": "thebrowser.company.arcBasicsFolderID",
+            "title": "Arc Basics",
+            "parentID": "c1000000-0000-4000-8000-000000000000",
+            "childrenIds": [
+              "thebrowser.company.arcGettingStarted"
+            ],
+            "createdAt": 757562417.372359,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "list": {}
+            }
+          },
+          "thebrowser.company.arcGettingStarted",
+          {
+            "id": "thebrowser.company.arcGettingStarted",
+            "title": "Getting Started",
+            "parentID": "thebrowser.company.arcBasicsFolderID",
+            "childrenIds": [],
+            "createdAt": 757562417.372359,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "welcomeToArc": {
+                "timeLastActiveAt": 763437799.177326,
+                "tabType": "legacy"
+              }
+            }
+          },
+          "f1000000-0000-4000-8000-000000000000",
+          {
+            "id": "f1000000-0000-4000-8000-000000000000",
+            "title": "Dev Links",
+            "parentID": "c1000000-0000-4000-8000-000000000000",
+            "childrenIds": [
+              "b1000000-0000-4000-8000-000000000000",
+              "b2000000-0000-4000-8000-000000000000"
+            ],
+            "createdAt": 760000000.0,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "list": {}
+            }
+          },
+          "b1000000-0000-4000-8000-000000000000",
+          {
+            "id": "b1000000-0000-4000-8000-000000000000",
+            "title": null,
+            "parentID": "f1000000-0000-4000-8000-000000000000",
+            "childrenIds": [],
+            "createdAt": 761000000.0,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "tab": {
+                "savedURL": "https://github.com",
+                "savedTitle": "GitHub",
+                "timeLastActiveAt": 762000000.0,
+                "savedMuteStatus": "allowAudio"
+              }
+            }
+          },
+          "b2000000-0000-4000-8000-000000000000",
+          {
+            "id": "b2000000-0000-4000-8000-000000000000",
+            "title": null,
+            "parentID": "f1000000-0000-4000-8000-000000000000",
+            "childrenIds": [],
+            "createdAt": 761500000.0,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "tab": {
+                "savedURL": "https://figma.com",
+                "savedTitle": "Figma",
+                "timeLastActiveAt": 762500000.0,
+                "savedMuteStatus": "allowAudio"
+              }
+            }
+          },
+          "b3000000-0000-4000-8000-000000000000",
+          {
+            "id": "b3000000-0000-4000-8000-000000000000",
+            "title": "My Custom Name",
+            "parentID": "c1000000-0000-4000-8000-000000000000",
+            "childrenIds": [],
+            "createdAt": 763000000.0,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "tab": {
+                "savedURL": "https://notion.so",
+                "savedTitle": "Notion — original title",
+                "timeLastActiveAt": 764000000.0,
+                "savedMuteStatus": "allowAudio"
+              }
+            }
+          },
+          "f2000000-0000-4000-8000-000000000000",
+          {
+            "id": "f2000000-0000-4000-8000-000000000000",
+            "title": "Pull Requests",
+            "parentID": "c2000000-0000-4000-8000-000000000000",
+            "childrenIds": [
+              "b5000000-0000-4000-8000-000000000000"
+            ],
+            "createdAt": 764000000.0,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "list": {
+                "automaticLiveFolderData": {
+                  "dataSource": { "github": {} },
+                  "hiddenItems": []
+                },
+                "customInfo": {
+                  "iconType": { "icon": "github" }
+                }
+              }
+            }
+          },
+          "b5000000-0000-4000-8000-000000000000",
+          {
+            "id": "b5000000-0000-4000-8000-000000000000",
+            "title": null,
+            "parentID": "f2000000-0000-4000-8000-000000000000",
+            "childrenIds": [],
+            "createdAt": 764500000.0,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "tab": {
+                "savedURL": "https://github.com/example/repo/pull/1",
+                "savedTitle": "PR #1",
+                "timeLastActiveAt": 765000000.0,
+                "savedMuteStatus": "allowAudio"
+              }
+            }
+          },
+          "b4000000-0000-4000-8000-000000000000",
+          {
+            "id": "b4000000-0000-4000-8000-000000000000",
+            "title": null,
+            "parentID": "c2000000-0000-4000-8000-000000000000",
+            "childrenIds": [],
+            "createdAt": 765000000.0,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "tab": {
+                "savedURL": "https://example.com",
+                "savedTitle": "Example Site",
+                "timeLastActiveAt": 766000000.0,
+                "savedMuteStatus": "allowAudio"
+              }
+            }
+          },
+          "b6000000-0000-4000-8000-000000000000",
+          {
+            "id": "b6000000-0000-4000-8000-000000000000",
+            "title": null,
+            "parentID": "c3000000-0000-4000-8000-000000000000",
+            "childrenIds": [],
+            "createdAt": 766000000.0,
+            "isUnread": false,
+            "originatingDevice": "d0000000-0000-4000-8000-000000000000",
+            "data": {
+              "tab": {
+                "savedURL": "https://calendar.google.com",
+                "savedTitle": "Google Calendar",
+                "timeLastActiveAt": 767000000.0,
+                "savedMuteStatus": "allowAudio"
+              }
+            }
+          }
+        ],
+        "topAppsContainerIDs": []
+      }
+    ]
+  },
+  "sidebarSyncState": {},
+  "version": 1
+}
