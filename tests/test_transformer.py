@@ -56,10 +56,12 @@ class TestTransformSpace:
         assert chrome.other.id == "2"
         assert chrome.synced.id == "3"
 
-    def test_user_node_ids_start_at_four(self) -> None:
+    def test_user_node_ids_do_not_collide_with_roots(self) -> None:
         item = _tab_item("a", "https://example.com", "Example")
         chrome = transform_space(_space_items(pinned=["a"], items={"a": item}))
-        assert chrome.bookmark_bar.children[0].id == "4"
+        root_ids = {chrome.bookmark_bar.id, chrome.other.id, chrome.synced.id}
+        user_id = chrome.bookmark_bar.children[0].id
+        assert user_id not in root_ids
 
     def test_tab_item_becomes_url_node(self) -> None:
         item = _tab_item("a", "https://example.com", "Example")

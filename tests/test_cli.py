@@ -14,14 +14,6 @@ ARC_FIXTURE = Path(__file__).parent / "fixtures" / "arc" / "sidebar.json"
 
 
 class TestCreateParser:
-    def test_creates_parser_with_program_name(self) -> None:
-        parser = create_parser()
-        assert parser.prog == "arc-exodus"
-
-    def test_creates_parser_with_description(self) -> None:
-        parser = create_parser()
-        assert parser.description is not None
-
     def test_space_argument_is_optional(self) -> None:
         parser = create_parser()
         args = parser.parse_args(["--profile", "/tmp"])

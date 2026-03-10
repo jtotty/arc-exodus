@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from arc_exodus.arc import default_sidebar_path, get_space_items, read_sidebar
 
 ARC_FIXTURE = Path(__file__).parent / "fixtures" / "arc" / "sidebar.json"
@@ -53,8 +55,6 @@ class TestGetSpaceItems:
         assert space_items.top_apps_ids
 
     def test_raises_for_unknown_space(self) -> None:
-        import pytest
-
         sidebar = read_sidebar(ARC_FIXTURE)
-        with pytest.raises(StopIteration):
+        with pytest.raises(ValueError, match="No space named"):
             get_space_items(sidebar, "Nonexistent Space")
