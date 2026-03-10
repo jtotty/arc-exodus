@@ -1,0 +1,65 @@
+[project]
+name = "arc-exodus"
+version = "0.1.0"
+description = "Transfer bookmarks from Arc browser to Chrome"
+readme = "README.md"
+authors = [
+    { email = "jt.totty1991@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+arc-exodus = "arc_exodus.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.10.9,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.408",
+    "pytest>=9.0.2",
+    "ruff>=0.15.5",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "F",     # pyflakes
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "I",     # isort
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "TC",    # flake8-type-checking
+    "RUF",   # ruff-specific rules
+    "PT",    # flake8-pytest-style
+    "RET",   # flake8-return
+    "ARG",   # flake8-unused-arguments
+    "ERA",   # eradicate (commented-out code)
+    "PLR",   # pylint refactor
+    "PLW",   # pylint warnings
+    "PIE",   # flake8-pie
+    "C4",    # flake8-comprehensions
+    "ANN",   # flake8-annotations
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ANN",     # don't require type annotations in tests for fixtures/params
+]
+
+[tool.pyright]
+pythonVersion = "3.13"
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
