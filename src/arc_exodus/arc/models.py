@@ -42,7 +42,7 @@ class SpaceItems:
     Produced by arc_reader, consumed by transformer.
     """
 
-    top_apps_ids: list[str]   # children of any topApps container
-    pinned_ids: list[str]     # children of the pinned container
-    unpinned_ids: list[str]   # children of the unpinned container
-    items: dict[str, ArcItem] # all items by id (superset — includes skipped items)
+    top_apps_ids: list[str]  # children of any topApps container
+    pinned_ids: list[str]  # children of the pinned container
+    unpinned_ids: list[str]  # children of the unpinned container
+    items: dict[str, ArcItem]  # all items by id (superset — includes skipped items)

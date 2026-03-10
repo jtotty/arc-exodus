@@ -47,9 +47,17 @@ class TestMain:
     ) -> None:
         profile_path = self._setup_chrome_dir(tmp_path) / "Default"
         monkeypatch.setattr("arc_exodus.cli.default_sidebar_path", lambda: ARC_FIXTURE)
-        monkeypatch.setattr(sys, "argv", [
-            "arc-exodus", "--space", "Personal", "--profile", str(profile_path),
-        ])
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "arc-exodus",
+                "--space",
+                "Personal",
+                "--profile",
+                str(profile_path),
+            ],
+        )
         main()
 
         output = json.loads((profile_path / "Bookmarks").read_text())
@@ -77,8 +85,16 @@ class TestMain:
     ) -> None:
         profile_path = self._setup_chrome_dir(tmp_path) / "Default"
         monkeypatch.setattr("arc_exodus.cli.default_sidebar_path", lambda: ARC_FIXTURE)
-        monkeypatch.setattr(sys, "argv", [
-            "arc-exodus", "--space", "Personal", "--profile", str(profile_path),
-        ])
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "arc-exodus",
+                "--space",
+                "Personal",
+                "--profile",
+                str(profile_path),
+            ],
+        )
         main()
         assert "Done" in capsys.readouterr().out

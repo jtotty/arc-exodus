@@ -54,6 +54,7 @@ class TestGetSpaceItems:
 
     def test_raises_for_unknown_space(self) -> None:
         import pytest
+
         sidebar = read_sidebar(ARC_FIXTURE)
         with pytest.raises(StopIteration):
             get_space_items(sidebar, "Nonexistent Space")
