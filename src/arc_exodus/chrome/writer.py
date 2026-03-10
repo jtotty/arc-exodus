@@ -1,9 +1,4 @@
-"""Write Chrome Bookmarks JSON file.
-
-Responsible for:
-- Serializing Chrome bookmark models to JSON
-- Writing to the correct Chrome profile directory
-"""
+"""Write Chrome Bookmarks JSON file."""
 
 from __future__ import annotations
 
@@ -14,7 +9,7 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from arc_exodus.models import ChromeBookmarkNode, ChromeBookmarks
+    from arc_exodus.chrome.models import ChromeBookmarkNode, ChromeBookmarks
 
 
 class _Hasher(Protocol):
@@ -36,12 +31,14 @@ def _compute_checksum(bookmarks: ChromeBookmarks) -> str:
     _process_node(bookmarks.bookmark_bar, digest)
     _process_node(bookmarks.other, digest)
     _process_node(bookmarks.synced, digest)
+
     return digest.hexdigest()
 
 
 def _process_node(node: ChromeBookmarkNode, digest: _Hasher) -> None:
     digest.update(node.id.encode("ascii"))
     digest.update(node.name.encode("utf-16-le"))
+
     if node.node_type == "url":
         digest.update(b"url")
         digest.update((node.url or "").encode("ascii"))

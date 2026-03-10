@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from typing import Any, cast
 
-from arc_exodus.models import ArcItem, ArcSidebar, ArcSpace, SpaceItems
+from arc_exodus.arc.models import ArcItem, ArcSidebar, ArcSpace, SpaceItems
 
 
 def default_sidebar_path() -> Path:
@@ -33,15 +33,15 @@ def read_sidebar(path: Path) -> ArcSidebar:
     spaces_map: dict[str, Any] = dict(
         zip(spaces_raw[::2], spaces_raw[1::2], strict=False)
     )
-    items_map: dict[str, Any] = dict(
-        zip(items_raw[::2], items_raw[1::2], strict=False)
-    )
+
+    items_map: dict[str, Any] = dict(zip(items_raw[::2], items_raw[1::2], strict=False))
 
     spaces = [
         _parse_space(cast("dict[str, Any]", obj))
         for obj in spaces_map.values()
         if isinstance(obj, dict)
     ]
+
     items = {
         item_id: _parse_item(cast("dict[str, Any]", obj))
         for item_id, obj in items_map.items()
@@ -77,6 +77,7 @@ def _parse_space(raw: dict[str, Any]) -> ArcSpace:
     container_ids: list[str] = raw["containerIDs"]
     pinned_idx = container_ids.index("pinned") + 1
     unpinned_idx = container_ids.index("unpinned") + 1
+
     return ArcSpace(
         id=raw["id"],
         title=raw["title"],

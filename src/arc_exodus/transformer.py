@@ -11,9 +11,12 @@ This makes them trivially testable and composable.
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from arc_exodus.models import ArcItem, ChromeBookmarkNode, ChromeBookmarks, SpaceItems
+from arc_exodus.chrome.models import ChromeBookmarkNode, ChromeBookmarks
+
+if TYPE_CHECKING:
+    from arc_exodus.arc.models import ArcItem, SpaceItems
 
 _SKIP_IDS = {"thebrowser.company.arcBasicsFolderID"}
 
@@ -83,9 +86,11 @@ def _transform_item(
     """Return a Chrome node for the given Arc item, or None to skip it."""
     if item_id in _SKIP_IDS:
         return None
+
     item = items.get(item_id)
     if item is None:
         return None
+
     return _build_node(item, items, counter)
 
 
@@ -104,12 +109,16 @@ def _build_node(
         list_data: dict[str, Any] = data["list"]
         if "automaticLiveFolderData" in list_data:
             return None
+
         children: list[ChromeBookmarkNode] = []
+
         for child_id in item.children_ids:
             child_node = _transform_item(child_id, items, counter)
             if child_node is not None:
                 children.append(child_node)
+
         date_added = _arc_ts_to_chrome(item.created_at)
+
         return ChromeBookmarkNode(
             id=str(counter.next()),
             name=item.title or "",
@@ -123,6 +132,7 @@ def _build_node(
     if "tab" in data:
         tab: dict[str, Any] = data["tab"]
         name = item.title if item.title is not None else str(tab["savedTitle"])
+
         return ChromeBookmarkNode(
             id=str(counter.next()),
             name=name,
