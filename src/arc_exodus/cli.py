@@ -3,11 +3,10 @@ import argparse
 
 def create_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser."""
-    parser = argparse.ArgumentParser(
+    return argparse.ArgumentParser(
         prog="arc-exodus",
         description="Transfer bookmarks from Arc browser to Chrome",
     )
-    return parser
 
 
 def main() -> None:
