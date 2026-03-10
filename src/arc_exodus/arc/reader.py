@@ -53,7 +53,13 @@ def read_sidebar(path: Path) -> ArcSidebar:
 
 def get_space_items(sidebar: ArcSidebar, space_title: str) -> SpaceItems:
     """Resolve the items belonging to the named space."""
-    space = next(s for s in sidebar.spaces if s.title == space_title)
+    space: ArcSpace | None = None
+    for s in sidebar.spaces:
+        if s.title == space_title:
+            space = s
+            break
+    if space is None:
+        raise ValueError(f"No space named '{space_title}'")
 
     pinned_container = sidebar.items[space.pinned_container_id]
     unpinned_container = sidebar.items[space.unpinned_container_id]
