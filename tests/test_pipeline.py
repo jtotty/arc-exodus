@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from arc_exodus.arc_reader import get_space_items, read_sidebar
-from arc_exodus.chrome_writer import write_bookmarks
+from arc_exodus.arc import get_space_items, read_sidebar
+from arc_exodus.chrome import write_bookmarks
 from arc_exodus.transformer import transform_space
 
 ARC_FIXTURE = Path(__file__).parent / "fixtures" / "arc" / "sidebar.json"
