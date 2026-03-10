@@ -1,0 +1,75 @@
+{
+  "checksum": "7402d1b3cb08de28e3e8c55feade6ce1",
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "children": [
+            {
+              "date_added": "13379276400000000",
+              "date_last_used": "0",
+              "guid": "11111111-0000-4000-8000-000000000005",
+              "id": "5",
+              "name": "GitHub",
+              "type": "url",
+              "url": "https://github.com"
+            },
+            {
+              "date_added": "13379276400000000",
+              "date_last_used": "0",
+              "guid": "11111111-0000-4000-8000-000000000006",
+              "id": "6",
+              "name": "Figma",
+              "type": "url",
+              "url": "https://figma.com"
+            }
+          ],
+          "date_added": "13379276400000000",
+          "date_last_used": "0",
+          "date_modified": "13379276400000000",
+          "guid": "11111111-0000-4000-8000-000000000004",
+          "id": "4",
+          "name": "Dev Links",
+          "type": "folder"
+        },
+        {
+          "date_added": "13379276400000000",
+          "date_last_used": "0",
+          "guid": "11111111-0000-4000-8000-000000000007",
+          "id": "7",
+          "name": "Example Site",
+          "type": "url",
+          "url": "https://example.com"
+        }
+      ],
+      "date_added": "13379276400000000",
+      "date_last_used": "0",
+      "date_modified": "13379276400000000",
+      "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+      "id": "1",
+      "name": "Bookmarks Bar",
+      "type": "folder"
+    },
+    "other": {
+      "children": [],
+      "date_added": "13379276400000000",
+      "date_last_used": "0",
+      "date_modified": "0",
+      "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+      "id": "2",
+      "name": "Other Bookmarks",
+      "type": "folder"
+    },
+    "synced": {
+      "children": [],
+      "date_added": "13379276400000000",
+      "date_last_used": "0",
+      "date_modified": "0",
+      "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+      "id": "3",
+      "name": "Mobile Bookmarks",
+      "type": "folder"
+    }
+  },
+  "version": 1
+}
