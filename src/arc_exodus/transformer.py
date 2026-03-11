@@ -28,6 +28,7 @@ _SKIP_IDS = {"thebrowser.company.arcBasicsFolderID"}
 
 _FIRST_USER_NODE_ID = max(int(BOOKMARK_BAR_ID), int(OTHER_ID), int(SYNCED_ID)) + 1
 
+
 def transform_space(space_items: SpaceItems) -> Ok[list[ChromeBookmarkNode]]:
     """Transform a resolved Arc space into a list of Chrome bookmark nodes."""
     counter = _Counter(start=_FIRST_USER_NODE_ID)
