@@ -9,7 +9,7 @@ from arc_exodus.chrome.errors import WriteError
 from arc_exodus.chrome.messages import write_error_message
 from arc_exodus.chrome.models import ChromeBookmarkNode
 from arc_exodus.chrome.writer import write_bookmarks
-from arc_exodus.result import Ok
+from arc_exodus.result import Err, Ok
 
 CHROME_FIXTURE = Path(__file__).parent / "fixtures" / "chrome" / "bookmarks.json"
 
@@ -165,3 +165,16 @@ class TestSafeWrite:
         write_bookmarks([_url_node("4", "New", "https://new.com")], tmp_path)
         backup = next(tmp_path.glob("Bookmarks.bak.*"))
         assert backup.read_text() == original
+
+
+class TestWriteErrors:
+    def test_permission_denied_returns_err(self, tmp_path: Path) -> None:
+        profile_path = tmp_path / "locked"
+        profile_path.mkdir(mode=0o444)
+        result = write_bookmarks([_url_node("4", "X", "https://x.com")], profile_path)
+        assert isinstance(result, Err)
+        assert result.error.kind == "permission_denied"
+
+    def test_ok_returned_on_success(self, tmp_path: Path) -> None:
+        result = write_bookmarks([_url_node("4", "X", "https://x.com")], tmp_path)
+        assert isinstance(result, Ok)

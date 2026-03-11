@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import contextlib
 import dataclasses
+import errno
 import hashlib
 import json
 import os
@@ -12,6 +14,7 @@ import time
 import uuid
 from typing import TYPE_CHECKING, Any, Protocol
 
+from arc_exodus.chrome.errors import WriteError
 from arc_exodus.chrome.models import (
     BOOKMARK_BAR_GUID,
     BOOKMARK_BAR_ID,
@@ -22,12 +25,10 @@ from arc_exodus.chrome.models import (
     ChromeBookmarkNode,
     ChromeBookmarks,
 )
-from arc_exodus.result import Ok, Result
+from arc_exodus.result import Err, Ok, Result
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    from arc_exodus.chrome.errors import WriteError
 
 _FIRST_IMPORT_ID = max(int(BOOKMARK_BAR_ID), int(OTHER_ID), int(SYNCED_ID)) + 1
 
@@ -42,7 +43,11 @@ def write_bookmarks(
     nodes: list[ChromeBookmarkNode], profile_path: Path
 ) -> Result[None, WriteError]:
     """Construct root structure, compute checksum, and write Bookmarks."""
-    existing = _read_existing(profile_path)
+    existing_result = _read_existing(profile_path)
+    if isinstance(existing_result, Err):
+        return existing_result
+
+    existing = existing_result.value
     if existing is not None:
         max_existing = max(
             _max_id(existing.bookmark_bar),
@@ -66,35 +71,59 @@ def write_bookmarks(
 
     bookmarks.checksum = _compute_checksum(bookmarks)
     output = json.dumps(bookmarks.to_dict(), indent=3, ensure_ascii=False)
-    bookmarks_path = profile_path / "Bookmarks"
-    if bookmarks_path.exists():
-        shutil.copy2(bookmarks_path, profile_path / f"Bookmarks.bak.{int(time.time())}")
-    _write_atomic(bookmarks_path, output)
-    return Ok(None)
+    return _write_atomic(profile_path, output)
 
 
-def _write_atomic(path: Path, content: str) -> None:
-    """Write content to path atomically via a temp file in the same directory."""
-    fd, tmp = tempfile.mkstemp(dir=path.parent)
-    os.write(fd, content.encode("utf-8"))
-    os.close(fd)
-    os.rename(tmp, path)
-
-
-def _read_existing(profile_path: Path) -> ChromeBookmarks | None:
-    """Read and parse an existing Bookmarks file, or return None if absent."""
+def _read_existing(
+    profile_path: Path,
+) -> Result[ChromeBookmarks | None, WriteError]:
+    """Read and parse an existing Bookmarks file, or return Ok(None) if absent."""
     path = profile_path / "Bookmarks"
-    if not path.exists():
-        return None
-    data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        if not path.exists():
+            return Ok(None)
+        data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    except PermissionError as exc:
+        return Err(WriteError(kind="permission_denied", message=str(exc)))
+    except OSError as exc:
+        return Err(WriteError(kind="unexpected", message=str(exc)))
     roots = data["roots"]
-    return ChromeBookmarks(
-        bookmark_bar=_node_from_dict(roots["bookmark_bar"]),
-        other=_node_from_dict(roots["other"]),
-        synced=_node_from_dict(roots["synced"]),
-        checksum=data.get("checksum", ""),
-        version=data.get("version", 1),
+    return Ok(
+        ChromeBookmarks(
+            bookmark_bar=_node_from_dict(roots["bookmark_bar"]),
+            other=_node_from_dict(roots["other"]),
+            synced=_node_from_dict(roots["synced"]),
+            checksum=data.get("checksum", ""),
+            version=data.get("version", 1),
+        )
     )
+
+
+def _write_atomic(profile_path: Path, content: str) -> Result[None, WriteError]:
+    """Back up existing file (if any) and write content atomically."""
+    bookmarks_path = profile_path / "Bookmarks"
+    tmp_path: str | None = None
+    try:
+        if bookmarks_path.exists():
+            bak = profile_path / f"Bookmarks.bak.{int(time.time())}"
+            shutil.copy2(bookmarks_path, bak)
+        fd, tmp_path = tempfile.mkstemp(dir=profile_path)
+        os.write(fd, content.encode("utf-8"))
+        os.close(fd)
+        os.rename(tmp_path, bookmarks_path)
+        return Ok(None)
+    except PermissionError as exc:
+        if tmp_path is not None:
+            with contextlib.suppress(OSError):
+                os.unlink(tmp_path)
+        return Err(WriteError(kind="permission_denied", message=str(exc)))
+    except OSError as exc:
+        if tmp_path is not None:
+            with contextlib.suppress(OSError):
+                os.unlink(tmp_path)
+        if exc.errno == errno.ENOSPC:
+            return Err(WriteError(kind="disk_full", message=""))
+        return Err(WriteError(kind="unexpected", message=str(exc)))
 
 
 def _node_from_dict(d: dict[str, Any]) -> ChromeBookmarkNode:
