@@ -145,3 +145,23 @@ class TestMergeWrite:
         process(data["roots"]["other"])
         process(data["roots"]["synced"])
         assert digest.hexdigest() == data["checksum"]
+
+
+class TestSafeWrite:
+    def test_backup_created_when_file_exists(self, tmp_path: Path) -> None:
+        shutil.copy(CHROME_FIXTURE, tmp_path / "Bookmarks")
+        write_bookmarks([_url_node("4", "New", "https://new.com")], tmp_path)
+        backups = list(tmp_path.glob("Bookmarks.bak.*"))
+        assert len(backups) == 1
+
+    def test_no_backup_when_no_existing_file(self, tmp_path: Path) -> None:
+        write_bookmarks([_url_node("4", "New", "https://new.com")], tmp_path)
+        backups = list(tmp_path.glob("Bookmarks.bak.*"))
+        assert len(backups) == 0
+
+    def test_backup_contains_original_content(self, tmp_path: Path) -> None:
+        shutil.copy(CHROME_FIXTURE, tmp_path / "Bookmarks")
+        original = (tmp_path / "Bookmarks").read_text()
+        write_bookmarks([_url_node("4", "New", "https://new.com")], tmp_path)
+        backup = next(tmp_path.glob("Bookmarks.bak.*"))
+        assert backup.read_text() == original

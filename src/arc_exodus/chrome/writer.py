@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
+import os
+import shutil
+import tempfile
+import time
 import uuid
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -45,16 +50,9 @@ def write_bookmarks(
             _max_id(existing.synced),
         )
         import_folder = _make_import_folder(nodes, start_id=max_existing + 1)
-        bar = existing.bookmark_bar
-        merged_bar = ChromeBookmarkNode(
-            id=bar.id,
-            name=bar.name,
-            node_type=bar.node_type,
-            guid=bar.guid,
-            date_added=bar.date_added,
-            date_last_used=bar.date_last_used,
-            children=[*bar.children, import_folder],
-            date_modified=bar.date_modified,
+        merged_bar = dataclasses.replace(
+            existing.bookmark_bar,
+            children=[*existing.bookmark_bar.children, import_folder],
         )
         bookmarks = ChromeBookmarks(
             bookmark_bar=merged_bar,
@@ -65,10 +63,22 @@ def write_bookmarks(
     else:
         import_folder = _make_import_folder(nodes, start_id=_FIRST_IMPORT_ID)
         bookmarks = _make_fresh_bookmarks(import_folder)
+
     bookmarks.checksum = _compute_checksum(bookmarks)
     output = json.dumps(bookmarks.to_dict(), indent=3, ensure_ascii=False)
-    (profile_path / "Bookmarks").write_text(output, encoding="utf-8")
+    bookmarks_path = profile_path / "Bookmarks"
+    if bookmarks_path.exists():
+        shutil.copy2(bookmarks_path, profile_path / f"Bookmarks.bak.{int(time.time())}")
+    _write_atomic(bookmarks_path, output)
     return Ok(None)
+
+
+def _write_atomic(path: Path, content: str) -> None:
+    """Write content to path atomically via a temp file in the same directory."""
+    fd, tmp = tempfile.mkstemp(dir=path.parent)
+    os.write(fd, content.encode("utf-8"))
+    os.close(fd)
+    os.rename(tmp, path)
 
 
 def _read_existing(profile_path: Path) -> ChromeBookmarks | None:
@@ -139,29 +149,10 @@ def _reassign_ids(
         if node.node_type == "folder":
             new_children, current = _reassign_ids(node.children, current)
             result.append(
-                ChromeBookmarkNode(
-                    id=str(node_id),
-                    name=node.name,
-                    node_type=node.node_type,
-                    guid=node.guid,
-                    date_added=node.date_added,
-                    date_last_used=node.date_last_used,
-                    children=new_children,
-                    date_modified=node.date_modified,
-                )
+                dataclasses.replace(node, id=str(node_id), children=new_children)
             )
         else:
-            result.append(
-                ChromeBookmarkNode(
-                    id=str(node_id),
-                    name=node.name,
-                    node_type=node.node_type,
-                    guid=node.guid,
-                    date_added=node.date_added,
-                    date_last_used=node.date_last_used,
-                    url=node.url,
-                )
-            )
+            result.append(dataclasses.replace(node, id=str(node_id)))
     return result, current
 
 
