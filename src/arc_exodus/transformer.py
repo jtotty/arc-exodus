@@ -14,8 +14,11 @@ import uuid
 from typing import TYPE_CHECKING, Any
 
 from arc_exodus.chrome.models import (
+    BOOKMARK_BAR_GUID,
     BOOKMARK_BAR_ID,
+    OTHER_GUID,
     OTHER_ID,
+    SYNCED_GUID,
     SYNCED_ID,
     ChromeBookmarkNode,
     ChromeBookmarks,
@@ -28,14 +31,6 @@ if TYPE_CHECKING:
 _SKIP_IDS = {"thebrowser.company.arcBasicsFolderID"}
 
 _FIRST_USER_NODE_ID = max(int(BOOKMARK_BAR_ID), int(OTHER_ID), int(SYNCED_ID)) + 1
-
-# Chrome's three root nodes have fixed GUIDs that are identical across all
-# installations — they are hardcoded in the Chromium source, not generated
-# per-profile. Chrome's checksum validation and sync depend on these values.
-_BOOKMARK_BAR_GUID = "0bc5d13f-2cba-5d74-951f-3f233fe6c908"
-_OTHER_GUID = "82b081ec-3dd3-529c-8475-ab6c344590dd"
-_SYNCED_GUID = "4cf2e351-0e85-532b-bb37-df045d8f8d0f"
-
 
 def transform_space(space_items: SpaceItems) -> Ok[list[ChromeBookmarkNode]]:
     """Transform a resolved Arc space into a list of Chrome bookmark nodes."""
@@ -64,13 +59,13 @@ def transform_space(space_items: SpaceItems) -> Ok[list[ChromeBookmarkNode]]:
 def make_chrome_bookmarks(nodes: list[ChromeBookmarkNode]) -> ChromeBookmarks:
     """Wrap import nodes in a full ChromeBookmarks structure.
 
-    Temporary adapter — removed in Phase 5 when the writer constructs root nodes.
+    Temporary adapter — removed in Phase 6 when the writer constructs root nodes.
     """
     bookmark_bar = ChromeBookmarkNode(
         id=BOOKMARK_BAR_ID,
         name="Bookmarks Bar",
         node_type="folder",
-        guid=_BOOKMARK_BAR_GUID,
+        guid=BOOKMARK_BAR_GUID,
         date_added="0",
         children=nodes,
         date_modified="0",
@@ -79,7 +74,7 @@ def make_chrome_bookmarks(nodes: list[ChromeBookmarkNode]) -> ChromeBookmarks:
         id=OTHER_ID,
         name="Other Bookmarks",
         node_type="folder",
-        guid=_OTHER_GUID,
+        guid=OTHER_GUID,
         date_added="0",
         date_modified="0",
     )
@@ -87,7 +82,7 @@ def make_chrome_bookmarks(nodes: list[ChromeBookmarkNode]) -> ChromeBookmarks:
         id=SYNCED_ID,
         name="Mobile Bookmarks",
         node_type="folder",
-        guid=_SYNCED_GUID,
+        guid=SYNCED_GUID,
         date_added="0",
         date_modified="0",
     )
