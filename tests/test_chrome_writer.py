@@ -1,0 +1,180 @@
+from __future__ import annotations
+
+import json
+import shutil
+from pathlib import Path
+from typing import Any
+
+from arc_exodus.chrome.errors import WriteError
+from arc_exodus.chrome.messages import write_error_message
+from arc_exodus.chrome.models import ChromeBookmarkNode
+from arc_exodus.chrome.writer import write_bookmarks
+from arc_exodus.result import Err, Ok
+
+CHROME_FIXTURE = Path(__file__).parent / "fixtures" / "chrome" / "bookmarks.json"
+
+
+def _url_node(node_id: str, name: str, url: str) -> ChromeBookmarkNode:
+    return ChromeBookmarkNode(
+        id=node_id,
+        name=name,
+        node_type="url",
+        guid="00000000-0000-4000-8000-000000000001",
+        date_added="0",
+        url=url,
+    )
+
+
+class TestWriteErrorMessage:
+    def test_permission_denied_mentions_path(self) -> None:
+        err = WriteError(kind="permission_denied", message="/some/path")
+        assert "/some/path" in write_error_message(err)
+
+    def test_disk_full_message(self) -> None:
+        err = WriteError(kind="disk_full", message="")
+        assert "disk" in write_error_message(err).lower()
+
+    def test_unexpected_includes_detail(self) -> None:
+        err = WriteError(kind="unexpected", message="something went wrong")
+        assert "something went wrong" in write_error_message(err)
+
+
+class TestFreshWrite:
+    def test_returns_ok(self, tmp_path: Path) -> None:
+        nodes = [_url_node("4", "Example", "https://example.com")]
+        result = write_bookmarks(nodes, tmp_path)
+        assert isinstance(result, Ok)
+
+    def test_creates_bookmarks_file(self, tmp_path: Path) -> None:
+        write_bookmarks([_url_node("4", "Example", "https://example.com")], tmp_path)
+        assert (tmp_path / "Bookmarks").exists()
+
+    def test_imported_from_arc_folder_in_bookmark_bar(self, tmp_path: Path) -> None:
+        write_bookmarks([_url_node("4", "Example", "https://example.com")], tmp_path)
+        data = json.loads((tmp_path / "Bookmarks").read_text())
+        bar_children = data["roots"]["bookmark_bar"]["children"]
+        names = [c["name"] for c in bar_children]
+        assert "Imported from Arc" in names
+
+    def test_imported_nodes_are_children_of_import_folder(self, tmp_path: Path) -> None:
+        write_bookmarks([_url_node("4", "Example", "https://example.com")], tmp_path)
+        data = json.loads((tmp_path / "Bookmarks").read_text())
+        bar_children = data["roots"]["bookmark_bar"]["children"]
+        folder = next(c for c in bar_children if c["name"] == "Imported from Arc")
+        child_names = [c["name"] for c in folder["children"]]
+        assert "Example" in child_names
+
+    def test_checksum_is_valid(self, tmp_path: Path) -> None:
+        from hashlib import md5
+
+        write_bookmarks([_url_node("4", "Example", "https://example.com")], tmp_path)
+        data = json.loads((tmp_path / "Bookmarks").read_text())
+        digest = md5()
+
+        def process(node: dict[str, Any]) -> None:
+            digest.update(node["id"].encode("ascii"))
+            digest.update(node["name"].encode("utf-16-le"))
+            if node["type"] == "url":
+                digest.update(b"url")
+                digest.update(node["url"].encode("ascii"))
+            else:
+                digest.update(b"folder")
+                for child in node.get("children", []):
+                    process(child)
+
+        process(data["roots"]["bookmark_bar"])
+        process(data["roots"]["other"])
+        process(data["roots"]["synced"])
+        assert digest.hexdigest() == data["checksum"]
+
+
+class TestMergeWrite:
+    def test_existing_bookmarks_are_preserved(self, tmp_path: Path) -> None:
+        shutil.copy(CHROME_FIXTURE, tmp_path / "Bookmarks")
+        write_bookmarks([_url_node("4", "New Site", "https://new.com")], tmp_path)
+        data = json.loads((tmp_path / "Bookmarks").read_text())
+        bar_children = data["roots"]["bookmark_bar"]["children"]
+        names = [c["name"] for c in bar_children]
+        assert "Google Calendar" in names
+
+    def test_imported_from_arc_folder_appended(self, tmp_path: Path) -> None:
+        shutil.copy(CHROME_FIXTURE, tmp_path / "Bookmarks")
+        write_bookmarks([_url_node("4", "New Site", "https://new.com")], tmp_path)
+        data = json.loads((tmp_path / "Bookmarks").read_text())
+        bar_children = data["roots"]["bookmark_bar"]["children"]
+        names = [c["name"] for c in bar_children]
+        assert "Imported from Arc" in names
+        assert names.index("Google Calendar") < names.index("Imported from Arc")
+
+    def test_all_ids_are_unique_after_merge(self, tmp_path: Path) -> None:
+        shutil.copy(CHROME_FIXTURE, tmp_path / "Bookmarks")
+        write_bookmarks([_url_node("4", "New Site", "https://new.com")], tmp_path)
+        data = json.loads((tmp_path / "Bookmarks").read_text())
+
+        def collect_ids(node: dict[str, Any]) -> list[str]:
+            ids = [node["id"]]
+            for child in node.get("children", []):
+                ids.extend(collect_ids(child))
+            return ids
+
+        all_ids: list[str] = []
+        for root_key in ("bookmark_bar", "other", "synced"):
+            all_ids.extend(collect_ids(data["roots"][root_key]))
+        assert len(all_ids) == len(set(all_ids))
+
+    def test_checksum_valid_after_merge(self, tmp_path: Path) -> None:
+        from hashlib import md5
+
+        shutil.copy(CHROME_FIXTURE, tmp_path / "Bookmarks")
+        write_bookmarks([_url_node("4", "New Site", "https://new.com")], tmp_path)
+        data = json.loads((tmp_path / "Bookmarks").read_text())
+        digest = md5()
+
+        def process(node: dict[str, Any]) -> None:
+            digest.update(node["id"].encode("ascii"))
+            digest.update(node["name"].encode("utf-16-le"))
+            if node["type"] == "url":
+                digest.update(b"url")
+                digest.update(node["url"].encode("ascii"))
+            else:
+                digest.update(b"folder")
+                for child in node.get("children", []):
+                    process(child)
+
+        process(data["roots"]["bookmark_bar"])
+        process(data["roots"]["other"])
+        process(data["roots"]["synced"])
+        assert digest.hexdigest() == data["checksum"]
+
+
+class TestSafeWrite:
+    def test_backup_created_when_file_exists(self, tmp_path: Path) -> None:
+        shutil.copy(CHROME_FIXTURE, tmp_path / "Bookmarks")
+        write_bookmarks([_url_node("4", "New", "https://new.com")], tmp_path)
+        backups = list(tmp_path.glob("Bookmarks.bak.*"))
+        assert len(backups) == 1
+
+    def test_no_backup_when_no_existing_file(self, tmp_path: Path) -> None:
+        write_bookmarks([_url_node("4", "New", "https://new.com")], tmp_path)
+        backups = list(tmp_path.glob("Bookmarks.bak.*"))
+        assert len(backups) == 0
+
+    def test_backup_contains_original_content(self, tmp_path: Path) -> None:
+        shutil.copy(CHROME_FIXTURE, tmp_path / "Bookmarks")
+        original = (tmp_path / "Bookmarks").read_text()
+        write_bookmarks([_url_node("4", "New", "https://new.com")], tmp_path)
+        backup = next(tmp_path.glob("Bookmarks.bak.*"))
+        assert backup.read_text() == original
+
+
+class TestWriteErrors:
+    def test_permission_denied_returns_err(self, tmp_path: Path) -> None:
+        profile_path = tmp_path / "locked"
+        profile_path.mkdir(mode=0o444)
+        result = write_bookmarks([_url_node("4", "X", "https://x.com")], profile_path)
+        assert isinstance(result, Err)
+        assert result.error.kind == "permission_denied"
+
+    def test_ok_returned_on_success(self, tmp_path: Path) -> None:
+        result = write_bookmarks([_url_node("4", "X", "https://x.com")], tmp_path)
+        assert isinstance(result, Ok)
