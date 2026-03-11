@@ -13,12 +13,21 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Any
 
-from arc_exodus.chrome.models import ChromeBookmarkNode, ChromeBookmarks
+from arc_exodus.chrome.models import (
+    BOOKMARK_BAR_ID,
+    OTHER_ID,
+    SYNCED_ID,
+    ChromeBookmarkNode,
+    ChromeBookmarks,
+)
+from arc_exodus.result import Ok
 
 if TYPE_CHECKING:
     from arc_exodus.arc.models import ArcItem, SpaceItems
 
 _SKIP_IDS = {"thebrowser.company.arcBasicsFolderID"}
+
+_FIRST_USER_NODE_ID = max(int(BOOKMARK_BAR_ID), int(OTHER_ID), int(SYNCED_ID)) + 1
 
 # Chrome's three root nodes have fixed GUIDs that are identical across all
 # installations — they are hardcoded in the Chromium source, not generated
@@ -28,38 +37,46 @@ _OTHER_GUID = "82b081ec-3dd3-529c-8475-ab6c344590dd"
 _SYNCED_GUID = "4cf2e351-0e85-532b-bb37-df045d8f8d0f"
 
 
-def transform_space(space_items: SpaceItems) -> ChromeBookmarks:
-    """Transform a resolved Arc space into a Chrome bookmarks structure."""
-    counter = _Counter(start=4)  # roots occupy ids 1-3
-
-    bar_children: list[ChromeBookmarkNode] = []
+def transform_space(space_items: SpaceItems) -> Ok[list[ChromeBookmarkNode]]:
+    """Transform a resolved Arc space into a list of Chrome bookmark nodes."""
+    counter = _Counter(start=_FIRST_USER_NODE_ID)
+    warnings: list[str] = []
+    nodes: list[ChromeBookmarkNode] = []
 
     for item_id in space_items.top_apps_ids:
-        node = _transform_item(item_id, space_items.items, counter)
+        node = _transform_item(item_id, space_items.items, counter, warnings)
         if node is not None:
-            bar_children.append(node)
+            nodes.append(node)
 
     for item_id in space_items.pinned_ids:
-        node = _transform_item(item_id, space_items.items, counter)
+        node = _transform_item(item_id, space_items.items, counter, warnings)
         if node is not None:
-            bar_children.append(node)
+            nodes.append(node)
 
     for item_id in space_items.unpinned_ids:
-        node = _transform_item(item_id, space_items.items, counter)
+        node = _transform_item(item_id, space_items.items, counter, warnings)
         if node is not None:
-            bar_children.append(node)
+            nodes.append(node)
 
+    return Ok(nodes, warnings=warnings)
+
+
+def make_chrome_bookmarks(nodes: list[ChromeBookmarkNode]) -> ChromeBookmarks:
+    """Wrap import nodes in a full ChromeBookmarks structure.
+
+    Temporary adapter — removed in Phase 5 when the writer constructs root nodes.
+    """
     bookmark_bar = ChromeBookmarkNode(
-        id="1",
+        id=BOOKMARK_BAR_ID,
         name="Bookmarks Bar",
         node_type="folder",
         guid=_BOOKMARK_BAR_GUID,
         date_added="0",
-        children=bar_children,
+        children=nodes,
         date_modified="0",
     )
     other = ChromeBookmarkNode(
-        id="2",
+        id=OTHER_ID,
         name="Other Bookmarks",
         node_type="folder",
         guid=_OTHER_GUID,
@@ -67,14 +84,13 @@ def transform_space(space_items: SpaceItems) -> ChromeBookmarks:
         date_modified="0",
     )
     synced = ChromeBookmarkNode(
-        id="3",
+        id=SYNCED_ID,
         name="Mobile Bookmarks",
         node_type="folder",
         guid=_SYNCED_GUID,
         date_added="0",
         date_modified="0",
     )
-
     return ChromeBookmarks(bookmark_bar=bookmark_bar, other=other, synced=synced)
 
 
@@ -82,6 +98,7 @@ def _transform_item(
     item_id: str,
     items: dict[str, ArcItem],
     counter: _Counter,
+    warnings: list[str],
 ) -> ChromeBookmarkNode | None:
     """Return a Chrome node for the given Arc item, or None to skip it."""
     if item_id in _SKIP_IDS:
@@ -89,15 +106,17 @@ def _transform_item(
 
     item = items.get(item_id)
     if item is None:
+        warnings.append(f"Skipped item '{item_id}': not found in items")
         return None
 
-    return _build_node(item, items, counter)
+    return _build_node(item, items, counter, warnings)
 
 
 def _build_node(
     item: ArcItem,
     items: dict[str, ArcItem],
     counter: _Counter,
+    warnings: list[str],
 ) -> ChromeBookmarkNode | None:
     """Build a Chrome node from a validated Arc item, or None to skip it."""
     data = item.data
@@ -113,7 +132,7 @@ def _build_node(
         children: list[ChromeBookmarkNode] = []
 
         for child_id in item.children_ids:
-            child_node = _transform_item(child_id, items, counter)
+            child_node = _transform_item(child_id, items, counter, warnings)
             if child_node is not None:
                 children.append(child_node)
 
@@ -142,6 +161,7 @@ def _build_node(
             url=str(tab["savedURL"]),
         )
 
+    warnings.append(f"Skipped item '{item.id}': unrecognised data shape")
     return None
 
 

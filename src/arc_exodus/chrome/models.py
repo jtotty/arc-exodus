@@ -5,6 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+BOOKMARK_BAR_ID = "1"
+OTHER_ID = "2"
+SYNCED_ID = "3"
+
 
 @dataclass
 class ChromeBookmarkNode:
