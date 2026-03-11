@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from arc_exodus.chrome.models import (
     BOOKMARK_BAR_GUID,
@@ -37,12 +37,78 @@ def write_bookmarks(
     nodes: list[ChromeBookmarkNode], profile_path: Path
 ) -> Result[None, WriteError]:
     """Construct root structure, compute checksum, and write Bookmarks."""
-    import_folder = _make_import_folder(nodes, start_id=_FIRST_IMPORT_ID)
-    bookmarks = _make_fresh_bookmarks(import_folder)
+    existing = _read_existing(profile_path)
+    if existing is not None:
+        max_existing = max(
+            _max_id(existing.bookmark_bar),
+            _max_id(existing.other),
+            _max_id(existing.synced),
+        )
+        import_folder = _make_import_folder(nodes, start_id=max_existing + 1)
+        bar = existing.bookmark_bar
+        merged_bar = ChromeBookmarkNode(
+            id=bar.id,
+            name=bar.name,
+            node_type=bar.node_type,
+            guid=bar.guid,
+            date_added=bar.date_added,
+            date_last_used=bar.date_last_used,
+            children=[*bar.children, import_folder],
+            date_modified=bar.date_modified,
+        )
+        bookmarks = ChromeBookmarks(
+            bookmark_bar=merged_bar,
+            other=existing.other,
+            synced=existing.synced,
+            version=existing.version,
+        )
+    else:
+        import_folder = _make_import_folder(nodes, start_id=_FIRST_IMPORT_ID)
+        bookmarks = _make_fresh_bookmarks(import_folder)
     bookmarks.checksum = _compute_checksum(bookmarks)
     output = json.dumps(bookmarks.to_dict(), indent=3, ensure_ascii=False)
     (profile_path / "Bookmarks").write_text(output, encoding="utf-8")
     return Ok(None)
+
+
+def _read_existing(profile_path: Path) -> ChromeBookmarks | None:
+    """Read and parse an existing Bookmarks file, or return None if absent."""
+    path = profile_path / "Bookmarks"
+    if not path.exists():
+        return None
+    data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    roots = data["roots"]
+    return ChromeBookmarks(
+        bookmark_bar=_node_from_dict(roots["bookmark_bar"]),
+        other=_node_from_dict(roots["other"]),
+        synced=_node_from_dict(roots["synced"]),
+        checksum=data.get("checksum", ""),
+        version=data.get("version", 1),
+    )
+
+
+def _node_from_dict(d: dict[str, Any]) -> ChromeBookmarkNode:
+    """Reconstruct a ChromeBookmarkNode from Chrome's JSON dict."""
+    children = [_node_from_dict(c) for c in d.get("children", [])]
+    return ChromeBookmarkNode(
+        id=d["id"],
+        name=d["name"],
+        node_type=d["type"],
+        guid=d["guid"],
+        date_added=d["date_added"],
+        date_last_used=d.get("date_last_used", "0"),
+        url=d.get("url"),
+        children=children,
+        date_modified=d.get("date_modified"),
+    )
+
+
+def _max_id(node: ChromeBookmarkNode) -> int:
+    """Return the maximum integer ID found in the node tree."""
+    result = int(node.id)
+    for child in node.children:
+        result = max(result, _max_id(child))
+    return result
 
 
 def _make_import_folder(
