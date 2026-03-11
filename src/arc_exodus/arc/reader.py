@@ -87,12 +87,14 @@ def get_space_items(
             if "topApps" in container_type:
                 top_apps_ids.extend(item.children_ids)
 
-    return Ok(SpaceItems(
-        top_apps_ids=top_apps_ids,
-        pinned_ids=pinned_container.children_ids,
-        unpinned_ids=unpinned_container.children_ids,
-        items=sidebar.items,
-    ))
+    return Ok(
+        SpaceItems(
+            top_apps_ids=top_apps_ids,
+            pinned_ids=pinned_container.children_ids,
+            unpinned_ids=unpinned_container.children_ids,
+            items=sidebar.items,
+        )
+    )
 
 
 def _read_text(path: Path) -> Result[str, ReadError]:
