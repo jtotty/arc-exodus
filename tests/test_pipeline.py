@@ -18,10 +18,14 @@ ARC_FIXTURE = Path(__file__).parent / "fixtures" / "arc" / "sidebar.json"
 @pytest.fixture(scope="class")
 def bookmark_bar(tmp_path_factory: pytest.TempPathFactory) -> Any:
     """Run the full pipeline once for the test class and return the bookmark bar."""
+    from arc_exodus.result import Ok
+
     tmp_path = tmp_path_factory.mktemp("bookmarks")
-    sidebar = read_sidebar(ARC_FIXTURE)
-    space_items = get_space_items(sidebar, "Personal")
-    chrome = transform_space(space_items)
+    sidebar_result = read_sidebar(ARC_FIXTURE)
+    assert isinstance(sidebar_result, Ok)
+    space_result = get_space_items(sidebar_result.value, "Personal")
+    assert isinstance(space_result, Ok)
+    chrome = transform_space(space_result.value)
     write_bookmarks(chrome, tmp_path)
     return json.loads((tmp_path / "Bookmarks").read_text())
 
