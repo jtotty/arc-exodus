@@ -14,14 +14,10 @@ import uuid
 from typing import TYPE_CHECKING, Any
 
 from arc_exodus.chrome.models import (
-    BOOKMARK_BAR_GUID,
     BOOKMARK_BAR_ID,
-    OTHER_GUID,
     OTHER_ID,
-    SYNCED_GUID,
     SYNCED_ID,
     ChromeBookmarkNode,
-    ChromeBookmarks,
 )
 from arc_exodus.result import Ok
 
@@ -54,39 +50,6 @@ def transform_space(space_items: SpaceItems) -> Ok[list[ChromeBookmarkNode]]:
             nodes.append(node)
 
     return Ok(nodes, warnings=warnings)
-
-
-def make_chrome_bookmarks(nodes: list[ChromeBookmarkNode]) -> ChromeBookmarks:
-    """Wrap import nodes in a full ChromeBookmarks structure.
-
-    Temporary adapter — removed in Phase 6 when the writer constructs root nodes.
-    """
-    bookmark_bar = ChromeBookmarkNode(
-        id=BOOKMARK_BAR_ID,
-        name="Bookmarks Bar",
-        node_type="folder",
-        guid=BOOKMARK_BAR_GUID,
-        date_added="0",
-        children=nodes,
-        date_modified="0",
-    )
-    other = ChromeBookmarkNode(
-        id=OTHER_ID,
-        name="Other Bookmarks",
-        node_type="folder",
-        guid=OTHER_GUID,
-        date_added="0",
-        date_modified="0",
-    )
-    synced = ChromeBookmarkNode(
-        id=SYNCED_ID,
-        name="Mobile Bookmarks",
-        node_type="folder",
-        guid=SYNCED_GUID,
-        date_added="0",
-        date_modified="0",
-    )
-    return ChromeBookmarks(bookmark_bar=bookmark_bar, other=other, synced=synced)
 
 
 def _transform_item(

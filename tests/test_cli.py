@@ -119,6 +119,24 @@ class TestMain:
         out = capsys.readouterr().out
         assert "json" in out.lower()
 
+    def test_prints_friendly_error_for_write_failure(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        locked = tmp_path / "locked"
+        locked.mkdir(mode=0o444)
+        monkeypatch.setattr("arc_exodus.cli.default_sidebar_path", lambda: ARC_FIXTURE)
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["arc-exodus", "--space", "Personal", "--profile", str(locked)],
+        )
+        main()
+        out = capsys.readouterr().out
+        assert "permission" in out.lower()
+
     def test_prints_friendly_error_for_unknown_space(
         self,
         tmp_path: Path,
