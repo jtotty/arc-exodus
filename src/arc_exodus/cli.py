@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from arc_exodus.arc import default_sidebar_path, get_space_items, read_sidebar
+from arc_exodus.arc.messages import read_error_message
 from arc_exodus.chrome import (
     default_chrome_base_dir,
     list_chrome_profiles,
     write_bookmarks,
 )
+from arc_exodus.result import Err
 from arc_exodus.transformer import transform_space
+
+if TYPE_CHECKING:
+    from arc_exodus.arc import ArcSidebar
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -47,6 +53,21 @@ def _prompt_choice(prompt: str, options: list[str]) -> int:
             return int(raw) - 1
 
 
+def _resolve_space_name(args: argparse.Namespace, sidebar: ArcSidebar) -> str:
+    if args.space is not None:
+        return str(args.space)
+    titles = [s.title for s in sidebar.spaces]
+    return titles[_prompt_choice("Select Arc space to export", titles)]
+
+
+def _resolve_profile_path(args: argparse.Namespace) -> Path:
+    if args.profile is not None:
+        return Path(args.profile)
+    profiles = list_chrome_profiles(default_chrome_base_dir())
+    names = [name for name, _ in profiles]
+    return profiles[_prompt_choice("Select Chrome profile", names)][1]
+
+
 def main() -> None:
     """Entry point for the arc-exodus CLI."""
     try:
@@ -58,22 +79,23 @@ def main() -> None:
 def _run() -> None:
     args = create_parser().parse_args()
 
-    sidebar = read_sidebar(default_sidebar_path())
+    sidebar_result = read_sidebar(default_sidebar_path())
+    if isinstance(sidebar_result, Err):
+        print(read_error_message(sidebar_result.error))
+        return
+    sidebar = sidebar_result.value
+    for w in sidebar_result.warnings:
+        print(f"Warning: {w}")
 
-    if args.space is not None:
-        space_name: str = args.space
-    else:
-        titles = [s.title for s in sidebar.spaces]
-        space_name = titles[_prompt_choice("Select Arc space to export", titles)]
+    space_name = _resolve_space_name(args, sidebar)
+    profile_path = _resolve_profile_path(args)
 
-    if args.profile is not None:
-        profile_path: Path = args.profile
-    else:
-        profiles = list_chrome_profiles(default_chrome_base_dir())
-        names = [name for name, _ in profiles]
-        profile_path = profiles[_prompt_choice("Select Chrome profile", names)][1]
+    space_result = get_space_items(sidebar, space_name)
+    if isinstance(space_result, Err):
+        print(read_error_message(space_result.error))
+        return
 
-    write_bookmarks(transform_space(get_space_items(sidebar, space_name)), profile_path)
+    write_bookmarks(transform_space(space_result.value), profile_path)
     print("Done.")
 
 

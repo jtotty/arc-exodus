@@ -90,3 +90,54 @@ class TestMain:
         )
         main()
         assert "Done" in capsys.readouterr().out
+
+    def test_prints_friendly_error_when_sidebar_missing(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        monkeypatch.setattr(
+            "arc_exodus.cli.default_sidebar_path",
+            lambda: Path("/no/such/file.json"),
+        )
+        monkeypatch.setattr(sys, "argv", ["arc-exodus", "--space", "Personal"])
+        main()
+        out = capsys.readouterr().out
+        assert "not found" in out.lower()
+
+    def test_prints_friendly_error_for_malformed_json(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        bad = tmp_path / "bad.json"
+        bad.write_text("not json")
+        monkeypatch.setattr("arc_exodus.cli.default_sidebar_path", lambda: bad)
+        monkeypatch.setattr(sys, "argv", ["arc-exodus", "--space", "Personal"])
+        main()
+        out = capsys.readouterr().out
+        assert "json" in out.lower()
+
+    def test_prints_friendly_error_for_unknown_space(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        profile_path = self._setup_chrome_dir(tmp_path) / "Default"
+        monkeypatch.setattr("arc_exodus.cli.default_sidebar_path", lambda: ARC_FIXTURE)
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "arc-exodus",
+                "--space",
+                "Nonexistent Space",
+                "--profile",
+                str(profile_path),
+            ],
+        )
+        main()
+        out = capsys.readouterr().out
+        assert "nonexistent space" in out.lower()
