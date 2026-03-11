@@ -10,7 +10,7 @@ import pytest
 
 from arc_exodus.arc import get_space_items, read_sidebar
 from arc_exodus.chrome import write_bookmarks
-from arc_exodus.transformer import transform_space
+from arc_exodus.transformer import make_chrome_bookmarks, transform_space
 
 ARC_FIXTURE = Path(__file__).parent / "fixtures" / "arc" / "sidebar.json"
 
@@ -25,8 +25,9 @@ def bookmark_bar(tmp_path_factory: pytest.TempPathFactory) -> Any:
     assert isinstance(sidebar_result, Ok)
     space_result = get_space_items(sidebar_result.value, "Personal")
     assert isinstance(space_result, Ok)
-    chrome = transform_space(space_result.value)
-    write_bookmarks(chrome, tmp_path)
+    transform_result = transform_space(space_result.value)
+    assert isinstance(transform_result, Ok)
+    write_bookmarks(make_chrome_bookmarks(transform_result.value), tmp_path)
     return json.loads((tmp_path / "Bookmarks").read_text())
 
 

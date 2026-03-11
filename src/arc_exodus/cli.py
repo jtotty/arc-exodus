@@ -14,7 +14,7 @@ from arc_exodus.chrome import (
     write_bookmarks,
 )
 from arc_exodus.result import Err
-from arc_exodus.transformer import transform_space
+from arc_exodus.transformer import make_chrome_bookmarks, transform_space
 
 if TYPE_CHECKING:
     from arc_exodus.arc import ArcSidebar
@@ -95,7 +95,10 @@ def _run() -> None:
         print(read_error_message(space_result.error))
         return
 
-    write_bookmarks(transform_space(space_result.value), profile_path)
+    transform_result = transform_space(space_result.value)
+    for w in transform_result.warnings:
+        print(f"Warning: {w}")
+    write_bookmarks(make_chrome_bookmarks(transform_result.value), profile_path)
     print("Done.")
 
 
